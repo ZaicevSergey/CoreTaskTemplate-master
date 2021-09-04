@@ -13,28 +13,28 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl()  {
     }
 
-    public void createUsersTable() {
+    public void createUsersTable() throws ClassNotFoundException {
         userDaoJDBC.createUsersTable();
     }
 
-    public void dropUsersTable()  {
+    public void dropUsersTable() throws ClassNotFoundException {
         userDaoJDBC.dropUsersTable();
     }
 
-    public void saveUser(String name, String lastName, byte age) {
+    public void saveUser(String name, String lastName, byte age) throws ClassNotFoundException {
         userDaoJDBC.saveUser(name, lastName, age);
         System.out.println("User с именем – "+name+" добавлен в базу данных");
     }
 
-    public void removeUserById(long id) {
+    public void removeUserById(long id) throws ClassNotFoundException {
         userDaoJDBC.removeUserById(id);
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getAllUsers() throws ClassNotFoundException {
         return userDaoJDBC.getAllUsers();
     }
 
-    public void cleanUsersTable() {
+    public void cleanUsersTable() throws ClassNotFoundException {
         userDaoJDBC.cleanUsersTable();
     }
 

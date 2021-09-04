@@ -8,10 +8,11 @@ public class Util {
     private static final String URL = "jdbc:mysql://localhost:3306/mydbtest?useUnicode=true&useSSL=true&useJDBCCompliantTimezoneShift=true";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "58707851zss";
-    static Connection connection = null;
+
 
     public Util() {
     }
+
     public String getURL() {
         return URL;
     }
@@ -23,13 +24,17 @@ public class Util {
     public String getPASSWORD() {
         return PASSWORD;
     }
-    public static Connection connect() {
+
+    public static Connection getConnection() throws ClassNotFoundException {
+        Connection connection = null;
         try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-            System.out.println("Подключено");
-        } catch (SQLException var2) {
-            System.err.println("Не подключено");
+        } catch ( SQLException e) {
+            e.printStackTrace();
         }
         return connection;
     }
+
+
 }

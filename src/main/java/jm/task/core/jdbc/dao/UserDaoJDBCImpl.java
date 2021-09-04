@@ -10,85 +10,143 @@ import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
 
-        Util con = new Util();
+    private final Util con = new Util();
 
-        public UserDaoJDBCImpl() {
 
-        }
+    public UserDaoJDBCImpl() {
 
-        public void createUsersTable() {
-            String sql = "CREATE TABLE IF NOT EXISTS user (id BIGINT NOT NULL AUTO_INCREMENT, " +
-                    "name VARCHAR(20), lastName VARCHAR(20), age TINYINT, PRIMARY KEY (id))";
-            try (Connection connection = DriverManager.getConnection(con.getURL(), con.getUSERNAME(), con.getPASSWORD());
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
+    }
+
+    public void createUsersTable() throws ClassNotFoundException {
+        Connection connection = con.getConnection();
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS User " +
+                    "(id BIGINT NOT NULL AUTO_INCREMENT primary key, " +
+                    " name VARCHAR(50) NOT NULL, " +
+                    " lastName VARCHAR(50) NOT NULL, " +
+                    " age TINYINT NOT NULL)");
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+                statement.close();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
             }
-        }
-
-        public void dropUsersTable(){
-            String sql = "DROP TABLE IF EXISTS user";
-            try (Connection connection = DriverManager.getConnection(con.getURL(), con.getUSERNAME(), con.getPASSWORD());
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public void saveUser(String name, String lastName, byte age){
-            String sql = "INSERT INTO user (name, lastName, age) Values (?, ?, ?)";
-            try (Connection connection = DriverManager.getConnection(con.getURL(), con.getUSERNAME(), con.getPASSWORD());
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, name);
-                preparedStatement.setString(2, lastName);
-                preparedStatement.setByte(3, age);
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        public void removeUserById(long id){
-            String sql = "DELETE FROM user WHERE id ="+id;
-            try (Connection connection = DriverManager.getConnection(con.getURL(), con.getUSERNAME(), con.getPASSWORD());
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public List<User> getAllUsers(){
-            List<User> userList = new ArrayList<>();
-            String sql = "SELECT ID, NAME, LASTNAME, AGE FROM user";
-            try (Connection connection = DriverManager.getConnection(con.getURL(), con.getUSERNAME(), con.getPASSWORD());
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    User user = new User();
-                    user.setId(resultSet.getLong("id"));
-                    user.setName(resultSet.getString("name"));
-                    user.setLastName(resultSet.getString("lastName"));
-                    user.setAge(resultSet.getByte("age"));
-                    userList.add(user);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return userList;
-        }
-
-        public void cleanUsersTable(){
-            String sql = "DELETE FROM user";
-            try (Connection connection = DriverManager.getConnection(con.getURL(), con.getUSERNAME(), con.getPASSWORD());
-                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.execute();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
         }
     }
+
+    public void dropUsersTable() throws ClassNotFoundException {
+        Connection connection = con.getConnection();
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            statement.executeUpdate("DROP TABLE IF EXISTS User");
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+                statement.close();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
+            }
+        }
+    }
+
+    public void saveUser(String name, String lastName, byte age) throws ClassNotFoundException {
+        Connection connection = con.getConnection();
+        PreparedStatement pstmt = null;
+        try {
+            connection.setAutoCommit(false);
+            User user = new User(name, lastName, age);
+            pstmt = connection.prepareStatement
+                    ("INSERT INTO User (name, lastName, age) VALUES (?, ?, ?)");
+            pstmt.setString(1, user.getName());
+            pstmt.setString(2, user.getLastName());
+            pstmt.setByte(3, user.getAge());
+            pstmt.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            System.out.println("SQLException");
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        } finally {
+            try {
+                connection.close();
+                pstmt.close();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
+            }
+        }
+    }
+
+    public void removeUserById(long id) throws ClassNotFoundException {
+        Connection connection = con.getConnection();
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement("DELETE FROM User WHERE id = ?");
+            pstmt.setLong(1, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+                pstmt.close();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
+            }
+        }
+    }
+
+    public List<User> getAllUsers() throws ClassNotFoundException {
+        Connection connection = con.getConnection();
+        Statement statement = null;
+        List<User> list = new ArrayList<>();
+        try {
+            statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM User");
+            while (resultSet.next()) {
+                User user = new User(resultSet.getString(2),
+                        resultSet.getString(3),
+                        resultSet.getByte(4));
+                list.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+                statement.close();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
+            }
+        }
+        return list;
+    }
+
+    public void cleanUsersTable() throws ClassNotFoundException {
+        Connection connection = con.getConnection();
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement("TRUNCATE TABLE User");
+            pstmt.executeUpdate();
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+                pstmt.close();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
+            }
+        }
+    }
+}
