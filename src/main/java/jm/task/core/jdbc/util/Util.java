@@ -1,11 +1,10 @@
 package jm.task.core.jdbc.util;
 
 import jm.task.core.jdbc.model.User;
+import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.ServiceRegistry;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,68 +12,40 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class Util {
-    private static final String URL = "jdbc:mysql://localhost:3306/mydbtest?useUnicode=true&useSSL=true&useJDBCCompliantTimezoneShift=true";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "58707851zss";
+    private static final String DB_USER = "root";
+    private static final String DB_PASS = "58707851zss";
+    private static final String DB_NAME = "mydbtest";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/" + DB_NAME;
 
-
-    public Util() {
-    }
-
-    public String getURL() {
-        return URL;
-    }
-
-    public String getUSERNAME() {
-        return USERNAME;
-    }
-
-    public String getPASSWORD() {
-        return PASSWORD;
-    }
-
-    public static Connection getConnection() throws ClassNotFoundException {
-        Connection connection = null;
+    public static Connection getConnection() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        } catch (SQLException e) {
-            e.printStackTrace();
+            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
-        return connection;
+        return null;
     }
-    private static SessionFactory sessionFactory;
+
     public static SessionFactory getSessionFactory() {
-        if (sessionFactory == null) {
-            try {
-                Configuration configuration = new Configuration();
+        SessionFactory sessionFactory = null;
+        try {
+            Properties properties = new Properties();
+            properties.setProperty(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
+            properties.setProperty(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+            properties.setProperty(Environment.SHOW_SQL, "true");
+            properties.setProperty(Environment.USER, DB_USER);
+            properties.setProperty(Environment.PASS, DB_PASS);
+            properties.setProperty(Environment.URL, DB_URL);
 
-                Properties settings = new Properties();
-                settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-                settings.put(Environment.URL, "jdbc:mysql://localhost:3306/mydbtest?useSSL=false");
-                settings.put(Environment.USER, "root");
-                settings.put(Environment.PASS, "58707851zss");
-                settings.put(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
+            sessionFactory = new Configuration()
+                    .setProperties(properties)
+                    .addAnnotatedClass(User.class)
+                    .buildSessionFactory();
 
-                settings.put(Environment.SHOW_SQL, "true");
-
-                settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-
-                settings.put(Environment.HBM2DDL_AUTO, "create-drop");
-
-                configuration.setProperties(settings);
-
-                configuration.addAnnotatedClass(User.class);
-
-                ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-                        .applySettings(configuration.getProperties()).build();
-
-                sessionFactory = configuration.buildSessionFactory(serviceRegistry);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        } catch (HibernateException e) {
+            System.out.println("Ошибка при создании сессии");
+            e.printStackTrace();
         }
         return sessionFactory;
     }
-
 }

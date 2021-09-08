@@ -9,144 +9,93 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDaoJDBCImpl implements UserDao {
-
-    private final Util con = new Util();
-
+    private final Connection connection = Util.getConnection();
 
     public UserDaoJDBCImpl() {
 
     }
 
-    public void createUsersTable() throws ClassNotFoundException {
-        Connection connection = con.getConnection();
-        Statement statement = null;
-        try {
-            statement = connection.createStatement();
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS User " +
-                    "(id BIGINT NOT NULL AUTO_INCREMENT primary key, " +
-                    " name VARCHAR(50) NOT NULL, " +
-                    " lastName VARCHAR(50) NOT NULL, " +
-                    " age TINYINT NOT NULL)");
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-        } finally {
-            try {
-                connection.close();
-                statement.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-            }
+    public void createUsersTable() {
+        try (Statement statement = connection.createStatement()) {
+
+            statement.execute("CREATE TABLE IF NOT EXISTS users (id INT NOT NULL AUTO_INCREMENT, name VARCHAR(50) NOT NULL," +
+                    "lastname VARCHAR(50) NOT NULL, age INT(3) NULL, PRIMARY KEY (`id`)) ENGINE = InnoDB DEFAULT CHARACTER SET = utf8;");
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
-    public void dropUsersTable() throws ClassNotFoundException {
-        Connection connection = con.getConnection();
-        Statement statement = null;
-        try {
-            statement = connection.createStatement();
-            statement.executeUpdate("DROP TABLE IF EXISTS User");
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-        } finally {
-            try {
-                connection.close();
-                statement.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-            }
+    public void dropUsersTable() {
+        try (Statement statement = connection.createStatement()) {
+
+            statement.execute("DROP TABLE IF EXISTS users;");
+
+        } catch (SQLException throwables) {
+            System.out.println("Не удалось удалить таблицу");
+            throwables.printStackTrace();
         }
     }
 
-    public void saveUser(String name, String lastName, byte age) throws ClassNotFoundException {
-        Connection connection = con.getConnection();
-        PreparedStatement pstmt = null;
-        try {
-            connection.setAutoCommit(false);
-            User user = new User(name, lastName, age);
-            pstmt = connection.prepareStatement
-                    ("INSERT INTO User (name, lastName, age) VALUES (?, ?, ?)");
-            pstmt.setString(1, user.getName());
-            pstmt.setString(2, user.getLastName());
-            pstmt.setByte(3, user.getAge());
-            pstmt.executeUpdate();
-            connection.commit();
-        } catch (SQLException e) {
-            System.out.println("SQLException");
-            try {
-                connection.rollback();
-            } catch (SQLException e1) {
-                e1.printStackTrace();
-            }
-        } finally {
-            try {
-                connection.close();
-                pstmt.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-            }
+    public void saveUser(String name, String lastName, byte age) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT INTO users(name, lastname, age) VALUES (?, ?, ?);")) {
+
+            statement.setString(1, name);
+            statement.setString(2, lastName);
+            statement.setByte(3, age);
+            statement.executeUpdate();
+            System.out.println("User с именем – " + name + " добавлен в базу данных");
+
+        } catch (SQLException throwables) {
+            System.out.println("Не удалось добавить пользователя");
+            throwables.printStackTrace();
         }
     }
 
-    public void removeUserById(long id) throws ClassNotFoundException {
-        Connection connection = con.getConnection();
-        PreparedStatement pstmt = null;
-        try {
-            pstmt = connection.prepareStatement("DELETE FROM User WHERE id = ?");
-            pstmt.setLong(1, id);
-            pstmt.executeUpdate();
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-        } finally {
-            try {
-                connection.close();
-                pstmt.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-            }
+    public void removeUserById(long id) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM users WHERE id = ?;")) {
+
+            statement.setLong(1, id);
+            statement.executeUpdate();
+
+        } catch (SQLException throwables) {
+            System.out.println("Не удалось удалить пользователья");
+            throwables.printStackTrace();
         }
     }
 
-    public List<User> getAllUsers() throws ClassNotFoundException {
-        Connection connection = con.getConnection();
-        Statement statement = null;
-        List<User> list = new ArrayList<>();
-        try {
-            statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM User");
-            while (resultSet.next()) {
-                User user = new User(resultSet.getString(2),
-                        resultSet.getString(3),
-                        resultSet.getByte(4));
-                list.add(user);
+    public List<User> getAllUsers() {
+        ArrayList<User> users = new ArrayList<>();
+
+        try (Statement statement = connection.createStatement()) {
+
+            ResultSet result = statement.executeQuery("SELECT * FROM users;");
+            while (result.next()) {
+                users.add(new User(
+                        result.getInt("id"),
+                        result.getString("name"),
+                        result.getString("lastname"),
+                        result.getByte("age")
+                ));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                connection.close();
-                statement.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-            }
+
+        } catch (SQLException throwables) {
+            System.out.println("Не удалось получить всех пользователей");
+            throwables.printStackTrace();
         }
-        return list;
+        users.forEach(System.out::println);
+        return users;
     }
 
-    public void cleanUsersTable() throws ClassNotFoundException {
-        Connection connection = con.getConnection();
-        PreparedStatement pstmt = null;
-        try {
-            pstmt = connection.prepareStatement("TRUNCATE TABLE User");
-            pstmt.executeUpdate();
-        } catch (SQLException e1) {
-            e1.printStackTrace();
-        } finally {
-            try {
-                connection.close();
-                pstmt.close();
-            } catch (SQLException e2) {
-                e2.printStackTrace();
-            }
+    public void cleanUsersTable() {
+        try (Statement statement = connection.createStatement()) {
+
+            statement.execute("TRUNCATE TABLE users;");
+
+        } catch (SQLException throwables) {
+            System.out.println("Не удалось очистить таблицу");
+            throwables.printStackTrace();
         }
     }
 }

@@ -3,33 +3,35 @@ package jm.task.core.jdbc.model;
 import javax.persistence.*;
 
 @Entity
-@Table ( name  =  " user " )
-
+@Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name")
+    @Column
     private String name;
 
-    @Column(name = "lastName")
+    @Column
     private String lastName;
 
-    @Column(name = "age")
+    @Column
     private Byte age;
 
-
-
-    public User() {
-
+    public User(int id, String name, String lastName, Byte age) {
+        this(name, lastName, age);
+        this.id = (long) id;
     }
 
     public User(String name, String lastName, Byte age) {
         this.name = name;
         this.lastName = lastName;
         this.age = age;
+    }
+
+    public User() {
+
     }
 
     public Long getId() {
