@@ -36,7 +36,11 @@ public class UserDaoHibernateImpl implements UserDao {
                 e.printStackTrace();
             }
         } finally {
-            session.close();
+            try {
+                session.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
 
     }
@@ -56,8 +60,11 @@ public class UserDaoHibernateImpl implements UserDao {
                 e.printStackTrace();
             }
         } finally {
-            session.close();
-
+            try {
+                session.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -78,7 +85,12 @@ public class UserDaoHibernateImpl implements UserDao {
                 System.out.println("Не удалось добавить пользователя");
                 e.printStackTrace();
             }
-
+        } finally {
+            try {
+                session.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -93,23 +105,28 @@ public class UserDaoHibernateImpl implements UserDao {
             query.executeUpdate();
             transaction.commit();
 
-    } catch(Exception e) {
-        if (transaction != null) {
-            transaction.rollback();
-            System.out.println("Не удалось удалить пользователя");
-            e.printStackTrace();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+                System.out.println("Не удалось удалить пользователя");
+                e.printStackTrace();
+            }
+        } finally {
+            try {
+                session.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
-    }finally {
-        session.close();
+
     }
 
-}
     @Override
     public List<User> getAllUsers() {
         Session session = sessionFactory.openSession();
         Transaction transaction = null;
         List<User> allUsers = new ArrayList<>();
-        try  {
+        try {
             transaction = session.beginTransaction();
             allUsers = session.createQuery("from User").list();
             transaction.commit();
@@ -119,8 +136,12 @@ public class UserDaoHibernateImpl implements UserDao {
                 System.out.println("Не удалось получить всех пользователей");
                 e.printStackTrace();
             }
-        }finally {
-            session.close();
+        } finally {
+            try {
+                session.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         allUsers.forEach(System.out::println);
         return allUsers;
@@ -130,7 +151,7 @@ public class UserDaoHibernateImpl implements UserDao {
     public void cleanUsersTable() {
         Session session = sessionFactory.openSession();
         Transaction transaction = null;
-        try  {
+        try {
             transaction = session.beginTransaction();
             session.createQuery("delete from User").executeUpdate();
             transaction.commit();
@@ -140,8 +161,12 @@ public class UserDaoHibernateImpl implements UserDao {
                 System.out.println("Не удалось очистить таблицу");
                 e.printStackTrace();
             }
-        }finally {
-            session.close();
+        } finally {
+            try {
+                session.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }
